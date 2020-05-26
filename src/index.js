@@ -6,8 +6,8 @@ class GameTile extends React.Component {
   render() {
     return (
       <div className="gameTile" id={this.props.id}> {
-      }
-      </div>
+        this.props.value
+      } </div>
     );
   }
 }
@@ -21,13 +21,13 @@ class GameBoard extends React.Component {
       let rowStart = Math.floor(colDiff/2);
       let rowEnd = rowStart + (4-colDiff);
       for (let row = rowStart; row <= rowEnd; row++) {
-        this.tileList.push({"row": row, "col": col});
+        this.tileList.push({"row": row, "col": col, "value":null});
       }
     }
   }
 
-  renderTile(row, col) {
-    return <GameTile id={"box"+col+row}/>;
+  renderTile(row, col, val) {
+    return <GameTile id={"box"+col+row} value={val}/>;
   }
 
   render() {
@@ -36,7 +36,7 @@ class GameBoard extends React.Component {
         <div className="gameBoard">
           {
             this.tileList.map(el => 
-            this.renderTile(el.row, el.col))
+            this.renderTile(el.row, el.col, el.value))
           }
         </div>
       </div>
@@ -45,20 +45,26 @@ class GameBoard extends React.Component {
 }
 
 class AvailableTiles extends React.Component {
-  renderTile(idx) {
-    return <GameTile id={"tile"+idx}/>;
+  constructor(props) {
+    super(props);
+    this.tileArr = [];
+    for (let idx = 0; idx < 6; idx++) {
+      this.tileArr.push({"idx": idx, "value": idx});
+    }
+  }
+
+  renderTile(idx, val) {
+    return <GameTile id={"tile"+idx} value={val}/>;
   }
 
   render() {
     return (
       <div>
         <div className="availableTiles">
-          {this.renderTile(0)}
-          {this.renderTile(1)}
-          {this.renderTile(2)}
-          {this.renderTile(3)}
-          {this.renderTile(4)}
-          {this.renderTile(5)}
+          {
+            this.tileArr.map(el =>
+            this.renderTile(el.idx, el.value))
+          }
         </div>
       </div>
     )
