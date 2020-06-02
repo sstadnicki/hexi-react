@@ -5,7 +5,7 @@ import './boardStyle.css';
 class GameTile extends React.Component {
   render() {
     return (
-      <div className="gameTile" id={this.props.id}> {
+      <div className={"gameTile" + (this.props.selected ? " selected" : "")} id={this.props.id}> {
         this.props.value
       } </div>
     );
@@ -43,8 +43,8 @@ class TileRack extends React.Component {
     super(props);
   }
 
-  renderTile(idx, val) {
-    return <GameTile key={idx} id={"tile"+idx} value={val}/>;
+  renderTile(idx, val, selected) {
+    return <GameTile key={idx} id={"tile"+idx} value={val} selected={selected}/>;
   }
 
   render() {
@@ -53,7 +53,7 @@ class TileRack extends React.Component {
         <div className="tileRack">
           {
             this.props.tileArr.map((el, idx) =>
-              this.renderTile(idx, el.value)
+              this.renderTile(idx, el.value, (idx === this.props.selectedIdx))
             )
           }
         </div>
@@ -95,8 +95,13 @@ class Game extends React.Component {
           "X",
           "Y", "Y",
           "Z"
-        ]
+        ],
+        selectedRackTile: 3
     };
+  }
+
+  onRackTileClicked(idx) {
+    this.setState({ selectedRackTile: idx });
   }
 
   render() {
@@ -104,7 +109,7 @@ class Game extends React.Component {
       <div className="game">
         <GameBoard tileGrid={this.state.gameGrid} />
         <div className="boardTilesGutter" />
-        <TileRack tileArr={this.state.tileArr} />
+        <TileRack tileArr={this.state.tileArr} selectedIdx = {this.state.selectedRackTile} />
       </div>
     );
   }
