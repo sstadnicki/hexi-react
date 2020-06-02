@@ -15,19 +15,10 @@ class GameTile extends React.Component {
 class GameBoard extends React.Component {
   constructor(props) {
     super(props);
-    this.tileList = [];
-    for (let col = 0; col <= 8; col++) {
-      let colDiff = Math.abs(4-col); // This will go 4..0..4
-      let rowStart = Math.floor(colDiff/2);
-      let rowEnd = rowStart + (4-colDiff);
-      for (let row = rowStart; row <= rowEnd; row++) {
-        this.tileList.push({"row": row, "col": col, "value":null});
-      }
-    }
   }
 
-  renderTile(row, col, val) {
-    return <GameTile id={"box"+col+row} value={val}/>;
+  renderTile(idx, row, col, val) {
+    return <GameTile key={idx} id={("box"+col)+row} value={val}/>;
   }
 
   render() {
@@ -35,8 +26,11 @@ class GameBoard extends React.Component {
       <div>
         <div className="gameBoard">
           {
-            this.tileList.map(el => 
-            this.renderTile(el.row, el.col, el.value))
+            this.props.tileGrid.map((el, elIdx) => {
+              let rowIdx = Math.floor(elIdx / 5);
+              let colIdx = elIdx % 5;
+              return this.renderTile(elIdx, rowIdx, colIdx, el.value);
+            })
           }
         </div>
       </div>
@@ -44,26 +38,23 @@ class GameBoard extends React.Component {
   }
 }
 
-class AvailableTiles extends React.Component {
+class TileRack extends React.Component {
   constructor(props) {
     super(props);
-    this.tileArr = [];
-    for (let idx = 0; idx < 6; idx++) {
-      this.tileArr.push({"idx": idx, "value": idx});
-    }
   }
 
   renderTile(idx, val) {
-    return <GameTile id={"tile"+idx} value={val}/>;
+    return <GameTile key={idx} id={"tile"+idx} value={val}/>;
   }
 
   render() {
     return (
       <div>
-        <div className="availableTiles">
+        <div className="tileRack">
           {
-            this.tileArr.map(el =>
-            this.renderTile(el.idx, el.value))
+            this.props.tileArr.map((el, idx) =>
+              this.renderTile(idx, el.value)
+            )
           }
         </div>
       </div>
@@ -72,12 +63,48 @@ class AvailableTiles extends React.Component {
 }
 
 class Game extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+        gameGrid: Array(25).fill(null).map((el, index) => ({value: String.fromCharCode(65+index)})),
+        tileArr: Array(6).fill(null).map((el, index) => ({value: String.fromCharCode(64+26-index)})),
+        tileBag: [
+          "A", "A", "A", "A", "A", "A", 
+          "B", "B",
+          "C", "C",
+          "D", "D", "D",
+          "E", "E", "E", "E", "E", "E", "E", "E",
+          "F", "F",
+          "G", "G",
+          "H", "H",
+          "I", "I", "I", "I", "I", "I",
+          "J",
+          "K",
+          "L", "L", "L", "L",
+          "M", "M",
+          "N", "N", "N", "N",
+          "O", "O", "O", "O", "O",
+          "P", "P",
+          "Qu",
+          "R", "R", "R", "R", "R",
+          "S", "S", "S", "S",
+          "T", "T", "T", "T", "T",
+          "U", "U",
+          "V",
+          "W",
+          "X",
+          "Y", "Y",
+          "Z"
+        ]
+    };
+  }
+
   render() {
     return (
       <div className="game">
-        <GameBoard />
+        <GameBoard tileGrid={this.state.gameGrid} />
         <div className="boardTilesGutter" />
-        <AvailableTiles />
+        <TileRack tileArr={this.state.tileArr} />
       </div>
     );
   }
