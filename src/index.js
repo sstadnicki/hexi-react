@@ -5,7 +5,11 @@ import './boardStyle.css';
 class GameTile extends React.Component {
   render() {
     return (
-      <div className={"gameTile" + (this.props.selected ? " selected" : "")} id={this.props.id}> {
+      <div
+        className={"gameTile" + (this.props.selected ? " selected" : "")}
+        id={this.props.id}
+        onClick={() => this.props.onTileClicked()}
+      > {
         this.props.value
       } </div>
     );
@@ -44,7 +48,13 @@ class TileRack extends React.Component {
   }
 
   renderTile(idx, val, selected) {
-    return <GameTile key={idx} id={"tile"+idx} value={val} selected={selected}/>;
+    return <GameTile
+             key = {idx}
+             id = {"tile"+idx}
+             value = {val}
+             selected = {selected}
+             onTileClicked = {() => this.props.onTileClicked(idx)}
+           />;
   }
 
   render() {
@@ -109,7 +119,11 @@ class Game extends React.Component {
       <div className="game">
         <GameBoard tileGrid={this.state.gameGrid} />
         <div className="boardTilesGutter" />
-        <TileRack tileArr={this.state.tileArr} selectedIdx = {this.state.selectedRackTile} />
+        <TileRack
+          tileArr = {this.state.tileArr}
+          selectedIdx = {this.state.selectedRackTile}
+          onTileClicked = {(idx) => this.onRackTileClicked(idx)}
+        />
       </div>
     );
   }
