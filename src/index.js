@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom'; 
 import './boardStyle.css';
 
 class GameTile extends React.Component {
@@ -17,9 +17,6 @@ class GameTile extends React.Component {
 }
 
 class GameBoard extends React.Component {
-  constructor(props) {
-    super(props);
-  }
 
   renderTile(idx, row, col, val) {
     return <GameTile key={idx} id={("box"+col)+row} value={val}/>;
@@ -43,9 +40,6 @@ class GameBoard extends React.Component {
 }
 
 class TileRack extends React.Component {
-  constructor(props) {
-    super(props);
-  }
 
   renderTile(idx, val, selected) {
     return <GameTile
@@ -69,6 +63,23 @@ class TileRack extends React.Component {
         </div>
       </div>
     )
+  }
+}
+
+class InteractionPanel extends React.Component {
+  render() {
+    return (
+      <React.Fragment>
+        <div className="instructionsText">
+          {this.props.instructionsText}
+        </div>
+        <div className="actionButtonDiv">
+          <button onClick={() => this.props.onButtonClick()}>
+            {this.props.buttonText}
+          </button>
+        </div>
+      </React.Fragment>
+    );
   }
 }
 
@@ -106,7 +117,9 @@ class Game extends React.Component {
           "Y", "Y",
           "Z"
         ],
-        selectedRackTile: 3
+        selectedRackTile: null,
+        instructionsText: "InstructionsText",
+        buttonText: "BUTTON"
     };
   }
 
@@ -114,16 +127,29 @@ class Game extends React.Component {
     this.setState({ selectedRackTile: idx });
   }
 
+  onPanelButtonClicked() {
+
+  }
+
   render() {
     return (
-      <div className="game">
-        <GameBoard tileGrid={this.state.gameGrid} />
-        <div className="boardTilesGutter" />
-        <TileRack
-          tileArr = {this.state.tileArr}
-          selectedIdx = {this.state.selectedRackTile}
-          onTileClicked = {(idx) => this.onRackTileClicked(idx)}
-        />
+      <div className="wrapper">
+        <div className="game">
+          <GameBoard tileGrid={this.state.gameGrid} />
+          <div className="boardTilesGutter" />
+          <TileRack
+            tileArr = {this.state.tileArr}
+            selectedIdx = {this.state.selectedRackTile}
+            onTileClicked = {(idx) => this.onRackTileClicked(idx)}
+          />
+        </div>
+        <div className="interactionPanel">
+          <InteractionPanel
+            instructionsText = {this.state.instructionsText}
+            buttonText = {this.state.buttonText}
+            onButtonClick = {() => this.onPanelButtonClicked()}
+          />
+        </div>
       </div>
     );
   }
