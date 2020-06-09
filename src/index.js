@@ -24,7 +24,6 @@ class GameBoard extends React.Component {
 
   render() {
     return (
-      <div>
         <div className="gameBoard">
           {
             this.props.tileGrid.map((el, elIdx) => {
@@ -34,7 +33,6 @@ class GameBoard extends React.Component {
             })
           }
         </div>
-      </div>
     );
   }
 }
@@ -53,14 +51,12 @@ class TileRack extends React.Component {
 
   render() {
     return (
-      <div>
-        <div className="tileRack">
-          {
-            this.props.tileArr.map((el, idx) =>
-              this.renderTile(idx, el.value, (idx === this.props.selectedIdx))
-            )
-          }
-        </div>
+      <div className="tileRack">
+        {
+          this.props.tileArr.map((el, idx) =>
+            this.renderTile(idx, el.value, (idx === this.props.selectedIdx))
+          )
+        }
       </div>
     )
   }
@@ -136,7 +132,6 @@ class Game extends React.Component {
       <div className="wrapper">
         <div className="game">
           <GameBoard tileGrid={this.state.gameGrid} />
-          <div className="boardTilesGutter" />
           <TileRack
             tileArr = {this.state.tileArr}
             selectedIdx = {this.state.selectedRackTile}
