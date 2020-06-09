@@ -80,6 +80,23 @@ class InteractionPanel extends React.Component {
 }
 
 class Game extends React.Component {
+
+  gameUIStates = {
+    selectingTile: "selectingTile",
+    tileSelected: "tileSelected",
+    buildWordStart: "buildWordStart",
+    wordBuilding: "wordBuilding"  
+  };
+
+  uiInstructionsText = {
+    selectingTile: "Click on a tile in the bottom row to select it",
+    tileSelected: "Click on an empty tile in the grid to place your selected tile",
+    buildWordStart: "Press and hold on a filled tile in the grid to start your word",
+    wordBuilding: "Drag over tiles in the grid to draw your word"
+  };
+
+  uiState = undefined;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -117,14 +134,22 @@ class Game extends React.Component {
         instructionsText: "InstructionsText",
         buttonText: "BUTTON"
     };
+    this.updateUIState(this.gameUIStates.selectingTile);
   }
 
   onRackTileClicked(idx) {
-    this.setState({ selectedRackTile: idx });
+    if ((this.uiState === this.gameUIStates.selectingTile) || (this.uiState === this.gameUIStates.tileSelected)) {
+      this.setState({ selectedRackTile: idx });
+      this.updateUIState(this.gameUIStates.tileSelected);
   }
 
   onPanelButtonClicked() {
 
+  }
+
+  updateUIState(newState) {
+    this.uiState = newState;
+    this.setState({instructionsText: this.uiInstructionsText[newState]});
   }
 
   render() {
