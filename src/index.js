@@ -141,6 +141,7 @@ class Game extends React.Component {
     if ((this.uiState === this.gameUIStates.selectingTile) || (this.uiState === this.gameUIStates.tileSelected)) {
       this.setState({ selectedRackTile: idx });
       this.updateUIState(this.gameUIStates.tileSelected);
+    }
   }
 
   onPanelButtonClicked() {
