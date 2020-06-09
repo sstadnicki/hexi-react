@@ -16,6 +16,11 @@
   justify-self: center;
 }
 
+.instructionsText {
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 20px;
+}
+
 .gameBoard {
   grid-row: 1;
   display: inline-grid;
