@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom'; 
+import update from 'immutability-helper';
 import './boardStyle.css';
 
 class GameTile extends React.Component {
@@ -18,8 +19,14 @@ class GameTile extends React.Component {
 
 class GameBoard extends React.Component {
 
-  renderTile(idx, row, col, val) {
-    return <GameTile key={idx} id={("box"+col)+row} value={val}/>;
+  renderTile(idx, row, col, val, score) {
+    return <GameTile
+            key={idx}
+            id={("box"+col)+row}
+            value={val}
+            scoreShade={score}
+            onTileClicked = {() => this.props.onTileClicked(idx)}
+            />;
   }
 
   render() {
@@ -29,7 +36,7 @@ class GameBoard extends React.Component {
             this.props.tileGrid.map((el, elIdx) => {
               let rowIdx = Math.floor(elIdx / 5);
               let colIdx = elIdx % 5;
-              return this.renderTile(elIdx, rowIdx, colIdx, el.value);
+              return this.renderTile(elIdx, rowIdx, colIdx, el.value, el.tileScore);
             })
           }
         </div>
@@ -100,7 +107,7 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-        gameGrid: Array(25).fill(null).map((el, index) => ({value: String.fromCharCode(65+index)})),
+        gameGrid: Array(25).fill(null).map((el, index) => ({value: "", tileScore: 0})),
         tileArr: Array(6).fill(null).map((el, index) => ({value: String.fromCharCode(64+26-index)})),
         tileBag: [
           "A", "A", "A", "A", "A", "A", 
@@ -134,13 +141,25 @@ class Game extends React.Component {
         instructionsText: "InstructionsText",
         buttonText: "BUTTON"
     };
-    this.updateUIState(this.gameUIStates.selectingTile);
+    // Initialize the instruction text based on the UI state
+    this.uiState = this.gameUIStates.selectingTile;
+    this.state.instructionsText =  this.uiInstructionsText[this.uiState];
   }
 
   onRackTileClicked(idx) {
     if ((this.uiState === this.gameUIStates.selectingTile) || (this.uiState === this.gameUIStates.tileSelected)) {
       this.setState({ selectedRackTile: idx });
       this.updateUIState(this.gameUIStates.tileSelected);
+    }
+  }
+
+  onGridTileClicked(idx) {
+    if ((this.uiState === this.gameUIStates.tileSelected)) {
+      let selectedTileVal = this.state.tileArr[this.state.selectedRackTile].value;
+      let newTileArr = update(this.state.tileArr, {[this.state.selectedRackTile]: {value: {$set: ""}}});
+      let newGameGrid = update(this.state.gameGrid, {[idx]: {value: {$set: selectedTileVal}}});
+      this.setState({tileArr: newTileArr, gameGrid: newGameGrid});
+      this.updateUIState(this.gameUIStates.buildWordStart);
     }
   }
 
@@ -157,7 +176,10 @@ class Game extends React.Component {
     return (
       <div className="wrapper">
         <div className="game">
-          <GameBoard tileGrid={this.state.gameGrid} />
+          <GameBoard
+            tileGrid={this.state.gameGrid}
+            onTileClicked = {(idx) => this.onGridTileClicked(idx)}
+          />
           <TileRack
             tileArr = {this.state.tileArr}
             selectedIdx = {this.state.selectedRackTile}
