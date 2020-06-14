@@ -101,7 +101,7 @@ class Game extends React.Component {
     tileSelected: "tileSelected",
     buildWordStart: "buildWordStart",
     wordBuilding: "wordBuilding",
-    worldBuilt: "wordBuilt"  
+    wordBuilt: "wordBuilt"  
   };
 
   uiInstructionsText = {
@@ -235,12 +235,34 @@ class Game extends React.Component {
   }
 
   onPanelButtonClicked() {
+    if (this.uiState === this.gameUIStates.buildWordStart) {
+      // End the turn without making a word
+      this.endTurn();
+    } else if (this.uiState === this.gameUIStates.wordBuilt) {
+      // Make the word
+      // And then end the turn
+      this.endTurn();
+    }
+  }
 
+  endTurn() {
+    // First of all, fill the empty tile with a new tile from the bag
+    let newTileBagIdx = Math.floor(Math.random() * this.state.tileBag.length);
+    let newTileValue = this.state.tileBag[newTileBagIdx];
+    let newTileArr = update(this.state.tileArr, {[this.state.selectedRackTile]: {value: {$set: newTileValue}}})
+    let newTileBag = update(this.state.tileBag, {$splice: [[newTileBagIdx, 1]]});
+    this.setState({
+      tileArr: newTileArr,
+      tileBag: newTileBag,
+      selectedRackTile: undefined
+    });
+    this.updateUIState(this.gameUIStates.selectingTile);
+    // Then update the player whose turn it is
   }
 
   updateUIState(newState) {
     this.uiState = newState;
-    this.setState({instructionsText: this.uiInstructionsText[newState]});
+    this.setState({instructionsText: this.uiInstructionsText[newState], buttonText: this.buttonText[newState]});
   }
 
   render() {
