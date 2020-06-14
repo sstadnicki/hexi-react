@@ -118,13 +118,21 @@ class Game extends React.Component {
     buildWordStart: "End turn",
     wordBuilding: "",
     wordBuilt: "Submit word"
-  }
+  };
+
+  // Defines the new score of a tile based on its previous score (-2..2, offset to be 0..4)
+  // and who just built a word through it (player 0 or player 1).
+  scoreUpdateTable = [
+    [-2, -2, -1, -1, 1],
+    [-1, 1, 1, 2, 2]
+  ];
 
   uiState = undefined;
 
   constructor(props) {
     super(props);
     this.state = {
+        currentPlayer: 0,
         gameGrid: Array(25).fill(null).map((el, index) => ({value: "", tileScore: 0})),
         tileArr: Array(6).fill(null).map((el, index) => ({value: ""})),
         tileBag: [
@@ -240,6 +248,13 @@ class Game extends React.Component {
       this.endTurn();
     } else if (this.uiState === this.gameUIStates.wordBuilt) {
       // Make the word
+      let newGameGrid = [...this.state.gameGrid];
+      for (let buildIdx of this.state.buildIndices) {
+        newGameGrid[buildIdx] = {...newGameGrid[buildIdx],
+          tileScore: this.scoreUpdateTable[this.state.currentPlayer][newGameGrid[buildIdx].tileScore+2]
+        };
+        this.setState({gameGrid: newGameGrid});
+      }
       // And then end the turn
       this.endTurn();
     }
@@ -251,13 +266,15 @@ class Game extends React.Component {
     let newTileValue = this.state.tileBag[newTileBagIdx];
     let newTileArr = update(this.state.tileArr, {[this.state.selectedRackTile]: {value: {$set: newTileValue}}})
     let newTileBag = update(this.state.tileBag, {$splice: [[newTileBagIdx, 1]]});
+    // Then update the player whose turn it is
+    let newPlayer = 1-this.state.currentPlayer;
     this.setState({
       tileArr: newTileArr,
       tileBag: newTileBag,
-      selectedRackTile: undefined
+      selectedRackTile: undefined,
+      currentPlayer: newPlayer
     });
     this.updateUIState(this.gameUIStates.selectingTile);
-    // Then update the player whose turn it is
   }
 
   updateUIState(newState) {

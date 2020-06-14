@@ -48,16 +48,16 @@
   user-select: none;
   background-color: #c0c0c0;
 }
-.gameTile.lightLeft {
+.gameTile.score-1 {
   background-color: #c0c0ff;
 }
-.gameTile.heavyLeft {
+.gameTile.score-2 {
   background-color: #5050ff;
 }
-.gameTile.lightRight {
+.gameTile.score1 {
   background-color: #ffa0a0;
 }
-.gameTile.heavyRight {
+.gameTile.score2 {
   background-color: #ff4040;
 }
 .gameTile.newTile {
