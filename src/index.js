@@ -23,11 +23,12 @@ class GameTile extends React.Component {
 
 class GameBoard extends React.Component {
 
-  renderTile(idx, row, col, val, score) {
+  renderTile(idx, row, col, val, score, selected) {
     return <GameTile
               key = {idx}
               id = {("box"+col)+row}
               value = {val}
+              selected = {selected}
               scoreShade = {score}
               onTileClicked = {() => this.props.onTileClicked(idx)}
               onTileMouseDown = {() => this.props.onTileMouseDown(idx)}
@@ -42,7 +43,8 @@ class GameBoard extends React.Component {
             this.props.tileGrid.map((el, elIdx) => {
               let rowIdx = Math.floor(elIdx / 5);
               let colIdx = elIdx % 5;
-              return this.renderTile(elIdx, rowIdx, colIdx, el.value, el.tileScore);
+              let tileSelected = (this.props.buildIndices.indexOf(elIdx) !== -1);
+              return this.renderTile(elIdx, rowIdx, colIdx, el.value, el.tileScore, tileSelected);
             })
           }
         </div>
@@ -271,6 +273,8 @@ class Game extends React.Component {
     this.setState({
       tileArr: newTileArr,
       tileBag: newTileBag,
+      builtWord: "",
+      buildIndices: [],
       selectedRackTile: undefined,
       currentPlayer: newPlayer
     });
@@ -288,6 +292,7 @@ class Game extends React.Component {
         <div className="game">
           <GameBoard
             tileGrid={this.state.gameGrid}
+            buildIndices={this.state.buildIndices}
             onTileClicked = {(idx) => this.onGridTileClicked(idx)}
             onTileMouseEnter = {(idx) => this.onGridTileEnter(idx)}
             onTileMouseDown = {(idx) => this.onGridTileMouseDown(idx)}
