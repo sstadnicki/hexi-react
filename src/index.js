@@ -126,7 +126,7 @@ class Game extends React.Component {
     super(props);
     this.state = {
         gameGrid: Array(25).fill(null).map((el, index) => ({value: "", tileScore: 0})),
-        tileArr: Array(6).fill(null).map((el, index) => ({value: String.fromCharCode(64+26-index)})),
+        tileArr: Array(6).fill(null).map((el, index) => ({value: ""})),
         tileBag: [
           "A", "A", "A", "A", "A", "A", 
           "B", "B",
@@ -165,6 +165,13 @@ class Game extends React.Component {
     this.uiState = this.gameUIStates.selectingTile;
     this.state.instructionsText =  this.uiInstructionsText[this.uiState];
     this.state.buttonText = this.buttonText[this.uiState];
+
+    // Initialize the tile array from the bag
+    for (let idx = 0; idx < this.state.tileArr.length; idx++) {
+      let bagIdx = Math.floor(Math.random() * this.state.tileBag.length);
+      let bagTile = this.state.tileBag.splice(bagIdx, 1)[0];
+      this.state.tileArr[idx].value = bagTile;
+    }
 
     // Assign off an arrow function to a variable on this so we can remove it as needed
     this.mouseUpFunc = () => {
