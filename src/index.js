@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom';
 import update from 'immutability-helper';
 import './boardStyle.css';
 
+function getXYFromIndex(idx) {
+  return {x: idx % 5, y: Math.floor(idx/5)};
+}
+
 class GameTile extends React.Component {
   render() {
     return (
@@ -41,8 +45,7 @@ class GameBoard extends React.Component {
         <div className="gameBoard">
           {
             this.props.tileGrid.map((el, elIdx) => {
-              let rowIdx = Math.floor(elIdx / 5);
-              let colIdx = elIdx % 5;
+              let {x: colIdx, y: rowIdx} = getXYFromIndex(elIdx);
               let tileSelected = (this.props.buildIndices.indexOf(elIdx) !== -1);
               return this.renderTile(elIdx, rowIdx, colIdx, el.value, el.tileScore, tileSelected);
             })
@@ -254,7 +257,7 @@ class Game extends React.Component {
 
   onGridTileMouseDown(idx) {
     if ((this.uiState === this.gameUIStates.buildWordStart)) {
-      if (this.state.gameGrid[idx] !== "") {
+      if (this.state.gameGrid[idx].value !== "") {
         this.setState({
           builtWord: this.state.gameGrid[idx].value,
           buildIndices: [idx]
@@ -267,15 +270,42 @@ class Game extends React.Component {
 
   onGridTileEnter(idx) {
     if ((this.uiState === this.gameUIStates.wordBuilding)) {
-      if (this.state.gameGrid[idx] !== "") {
-        let newWord = this.state.builtWord + this.state.gameGrid[idx].value;
-        let newIndicesArray = [...this.state.buildIndices, idx];
-        this.setState({
-          builtWord: newWord,
-          buildIndices: newIndicesArray
-        });
+      if (this.state.gameGrid[idx].value !== "") {
+        // If the tile we're going into is one away from the top of the list, then
+        // just pop the last item off the list
+        if ((this.state.buildIndices.length > 1) && (this.state.buildIndices.indexOf(idx) === this.state.buildIndices.length-2)) {
+          let newIndicesArray = [...this.state.buildIndices];
+          let lastIdx = newIndicesArray.pop();
+          let lastCharLength = this.state.gameGrid[lastIdx].value.length;
+          let newWord = this.state.builtWord.substring(0, this.state.builtWord.length - lastCharLength);
+          this.setState({
+            builtWord: newWord,
+            buildIndices: newIndicesArray
+          });
+        } else if (
+          (this.state.buildIndices.indexOf(idx) === -1)
+          && this.areIndicesAdjacent(idx, this.state.buildIndices[this.state.buildIndices.length-1])
+        ) {
+          let newWord = this.state.builtWord + this.state.gameGrid[idx].value;
+          let newIndicesArray = [...this.state.buildIndices, idx];
+          this.setState({
+            builtWord: newWord,
+            buildIndices: newIndicesArray
+          });
+        }
       }
     }
+  }
+
+  areIndicesAdjacent(firstIdx, secondIdx) {
+    let {x: firstX, y: firstY} = getXYFromIndex(firstIdx);
+    let {x: secondX, y: secondY} = getXYFromIndex(secondIdx);
+    let deltaX = secondX-firstX;
+    let deltaY = secondY-firstY;
+    return ((Math.abs(deltaX) === 1) && (deltaY === 0))
+        || ((deltaX === 0) && (Math.abs(deltaY) === 1))
+        || ((deltaX === -1) && (deltaY === 1))
+        || ((deltaX === 1) && (deltaY === -1));
   }
 
   onPanelButtonClicked() {
