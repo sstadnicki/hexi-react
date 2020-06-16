@@ -16,9 +16,45 @@
   justify-self: center;
 }
 
+.interactionPanel .wordHolder {
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 24px;
+}
+
+.interactionPanel .wordHolder .previousWord {
+  display: inline-block;
+}
+
+.interactionPanel .wordHolder .currentWord {
+  display: inline-block;
+}
+
+.playerName {
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 24px;
+  margin-top: 20px;
+  margin-bottom: 5px;
+}
+.playerName .player0 {
+  display: inline-block;
+  color: blue;
+}
+.playerName .player1 {
+  display: inline-block;
+  color: red;
+}
+
 .instructionsText {
   font-family: Verdana, Geneva, sans-serif;
   font-size: 20px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.submitButton {
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 16px;
+  text-align: center;
 }
 
 .gameBoard {

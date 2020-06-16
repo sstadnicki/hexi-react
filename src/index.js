@@ -52,6 +52,24 @@ class GameBoard extends React.Component {
   }
 }
 
+class CurrentPlayerPanel extends React.Component {
+  playerNameTable = [
+    "Blue",
+    "Red"
+  ];
+
+  render() {
+    return (
+      <div className="playerName">
+        Current Player:&nbsp;
+        <div className={"player" + this.props.player}>
+          {this.playerNameTable[this.props.player]}
+        </div>
+      </div>
+    );
+  }
+}
+
 class TileRack extends React.Component {
 
   renderTile(idx, val, selected) {
@@ -83,11 +101,26 @@ class InteractionPanel extends React.Component {
   render() {
     return (
       <React.Fragment>
+        <div className="wordHolder">
+          Previous Word:
+          <div className="previousWord">
+            {this.props.previousWord}
+          </div>
+        </div>
+        <CurrentPlayerPanel
+          player = {this.props.currentPlayer}
+        />
+        <div className="wordHolder">
+          Current Word:
+          <div className="currentWord">
+            {this.props.currentWord}
+          </div>
+        </div>
         <div className="instructionsText">
           {this.props.instructionsText}
         </div>
         <div className="actionButtonDiv">
-          <button onClick={() => this.props.onButtonClick()}>
+          <button className="submitButton" onClick={() => this.props.onButtonClick()}>
             {this.props.buttonText}
           </button>
         </div>
@@ -168,8 +201,9 @@ class Game extends React.Component {
         selectedRackTile: null,
         instructionsText: "InstructionsText",
         buttonText: "BUTTON",
+        buildIndices: [],
         builtWord: "",
-        buildIndices: []
+        previousWord: ""
     };
     // Initialize the instruction text based on the UI state
     this.uiState = this.gameUIStates.selectingTile;
@@ -270,11 +304,13 @@ class Game extends React.Component {
     let newTileBag = update(this.state.tileBag, {$splice: [[newTileBagIdx, 1]]});
     // Then update the player whose turn it is
     let newPlayer = 1-this.state.currentPlayer;
+    let prevWord = this.state.builtWord;
     this.setState({
       tileArr: newTileArr,
       tileBag: newTileBag,
-      builtWord: "",
       buildIndices: [],
+      builtWord: "",
+      previousWord: prevWord,
       selectedRackTile: undefined,
       currentPlayer: newPlayer
     });
@@ -305,6 +341,9 @@ class Game extends React.Component {
         </div>
         <div className="interactionPanel">
           <InteractionPanel
+            currentPlayer = {this.state.currentPlayer}
+            currentWord = {this.state.builtWord}
+            previousWord = {this.state.previousWord}
             instructionsText = {this.state.instructionsText}
             buttonText = {this.state.buttonText}
             onButtonClick = {() => this.onPanelButtonClicked()}
