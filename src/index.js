@@ -256,7 +256,8 @@ class Game extends React.Component {
   }
 
   onGridTileMouseDown(idx) {
-    if ((this.uiState === this.gameUIStates.buildWordStart)) {
+    if ((this.uiState === this.gameUIStates.buildWordStart)
+     || (this.uiState === this.gameUIStates.wordBuilt)) {
       if (this.state.gameGrid[idx].value !== "") {
         this.setState({
           builtWord: this.state.gameGrid[idx].value,
