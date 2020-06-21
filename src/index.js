@@ -139,7 +139,8 @@ class Game extends React.Component {
     tileSelected: "tileSelected",
     buildWordStart: "buildWordStart",
     wordBuilding: "wordBuilding",
-    wordBuilt: "wordBuilt"  
+    wordBuilt: "wordBuilt",
+    gameOver: "gameOver"
   };
 
   uiInstructionsText = {
@@ -147,7 +148,8 @@ class Game extends React.Component {
     tileSelected: "Click on an empty tile in the grid to place your selected tile",
     buildWordStart: "Press and hold on a filled tile in the grid to start your word",
     wordBuilding: "Drag over tiles in the grid to draw your word",
-    wordBuilt: "Submit your word"
+    wordBuilt: "Submit your word",
+    gameOver: "Congratulations!"
   };
 
   buttonText = {
@@ -155,7 +157,8 @@ class Game extends React.Component {
     tileSelected: "",
     buildWordStart: "End turn",
     wordBuilding: "",
-    wordBuilt: "Submit word"
+    wordBuilt: "Submit word",
+    gameOver: ""
   };
 
   // Defines the new score of a tile based on its previous score (-2..2, offset to be 0..4)
@@ -345,7 +348,17 @@ class Game extends React.Component {
       selectedRackTile: undefined,
       currentPlayer: newPlayer
     });
-    this.updateUIState(this.gameUIStates.selectingTile);
+    this.updateUIState(this.isGameOver()? this.gameUIStates.gameOver: this.gameUIStates.selectingTile);
+  }
+
+  isGameOver() {
+    // Check all of our tiles to see if any are empty. If so, the game's not over.
+    for (let tile of this.state.gameGrid) {
+      if (tile.value === "")
+        return false;
+    }
+    // If they're all full, then the game is done!
+    return true;
   }
 
   updateUIState(newState) {
