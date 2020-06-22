@@ -11,7 +11,10 @@ class GameTile extends React.Component {
   render() {
     return (
       <div
-        className = {"gameTile" + (this.props.selected ? " selected" : "") + " score"+this.props.scoreShade}
+        className = {"gameTile"
+          + (this.props.selected ? " selected" : "")
+          + (this.props.isNew ? " newTile" : "")
+          + " score"+this.props.scoreShade}
         id = {this.props.id}
         onClick = {() => this.props.onTileClicked()}
         onMouseDown = {() => this.props.onTileMouseDown()}
@@ -27,12 +30,13 @@ class GameTile extends React.Component {
 
 class GameBoard extends React.Component {
 
-  renderTile(idx, row, col, val, score, selected) {
+  renderTile(idx, row, col, val, score, selected, isNew) {
     return <GameTile
               key = {idx}
               id = {("box"+col)+row}
               value = {val}
               selected = {selected}
+              isNew = {isNew}
               scoreShade = {score}
               onTileClicked = {() => this.props.onTileClicked(idx)}
               onTileMouseDown = {() => this.props.onTileMouseDown(idx)}
@@ -47,7 +51,15 @@ class GameBoard extends React.Component {
             this.props.tileGrid.map((el, elIdx) => {
               let {x: colIdx, y: rowIdx} = getXYFromIndex(elIdx);
               let tileSelected = (this.props.buildIndices.indexOf(elIdx) !== -1);
-              return this.renderTile(elIdx, rowIdx, colIdx, el.value, el.tileScore, tileSelected);
+              return this.renderTile(
+                elIdx,
+                rowIdx,
+                colIdx,
+                el.value,
+                el.tileScore,
+                tileSelected,
+                (elIdx === this.props.tilePlacementLoc)
+              );
             })
           }
         </div>
@@ -160,6 +172,7 @@ class Game extends React.Component {
     buildWordStart: "buildWordStart",
     wordBuilding: "wordBuilding",
     wordBuilt: "wordBuilt",
+    invalidBuild: "invalidBuild",
     gameOver: "gameOver"
   };
 
@@ -169,6 +182,7 @@ class Game extends React.Component {
     buildWordStart: "Press and hold on a filled tile in the grid to start your word",
     wordBuilding: "Drag over tiles in the grid to draw your word",
     wordBuilt: "Submit your word",
+    invalidBuild: "You must draw a word through your new letter",
     gameOver: "Congratulations!"
   };
 
@@ -178,6 +192,7 @@ class Game extends React.Component {
     buildWordStart: "End turn",
     wordBuilding: "",
     wordBuilt: "Submit word",
+    invalidBuild: "",
     gameOver: ""
   };
 
@@ -225,6 +240,7 @@ class Game extends React.Component {
           "Z"
         ],
         selectedRackTile: null,
+        tilePlacementLoc: null,
         instructionsText: "InstructionsText",
         buttonText: "BUTTON",
         buildIndices: [],
@@ -247,8 +263,13 @@ class Game extends React.Component {
     this.mouseUpFunc = () => {
       if (this.uiState === this.gameUIStates.wordBuilding) {
         if (this.state.buildIndices.length > 2) {
-          // Success! We open the word up for submission.
-          this.updateUIState(this.gameUIStates.wordBuilt);
+          // We're long enough - let's make sure that the word the player made
+          // goes through the tile they placed.
+          if (this.state.buildIndices.indexOf(this.state.tilePlacementLoc) < 0) {
+            this.updateUIState(this.gameUIStates.invalidBuild);
+          } else {
+            this.updateUIState(this.gameUIStates.wordBuilt);
+          }
         } else {
           // Clear out the word we're building and the list of indices we're building with,
           // and bump our UI back to the start of word-building.
@@ -269,18 +290,19 @@ class Game extends React.Component {
   }
 
   onGridTileClicked(idx) {
-    if ((this.uiState === this.gameUIStates.tileSelected)) {
+    if ((this.uiState === this.gameUIStates.tileSelected) && (this.state.gameGrid[idx].value === "")) {
       let selectedTileVal = this.state.tileArr[this.state.selectedRackTile].value;
       let newTileArr = update(this.state.tileArr, {[this.state.selectedRackTile]: {value: {$set: ""}}});
       let newGameGrid = update(this.state.gameGrid, {[idx]: {value: {$set: selectedTileVal}}});
-      this.setState({tileArr: newTileArr, gameGrid: newGameGrid});
+      this.setState({tileArr: newTileArr, gameGrid: newGameGrid, tilePlacementLoc: idx});
       this.updateUIState(this.gameUIStates.buildWordStart);
     }
   }
 
   onGridTileMouseDown(idx) {
     if ((this.uiState === this.gameUIStates.buildWordStart)
-     || (this.uiState === this.gameUIStates.wordBuilt)) {
+     || (this.uiState === this.gameUIStates.wordBuilt)
+     || (this.uiState === this.gameUIStates.invalidBuild)) {
       if (this.state.gameGrid[idx].value !== "") {
         this.setState({
           builtWord: this.state.gameGrid[idx].value,
@@ -364,6 +386,7 @@ class Game extends React.Component {
       tileBag: newTileBag,
       buildIndices: [],
       builtWord: "",
+      tilePlacementLoc: null,
       previousWord: prevWord,
       selectedRackTile: undefined,
       currentPlayer: newPlayer
@@ -401,6 +424,7 @@ class Game extends React.Component {
           <GameBoard
             tileGrid={this.state.gameGrid}
             buildIndices={this.state.buildIndices}
+            tilePlacementLoc={this.state.tilePlacementLoc}
             onTileClicked = {(idx) => this.onGridTileClicked(idx)}
             onTileMouseEnter = {(idx) => this.onGridTileEnter(idx)}
             onTileMouseDown = {(idx) => this.onGridTileMouseDown(idx)}
