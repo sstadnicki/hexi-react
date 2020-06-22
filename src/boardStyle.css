@@ -44,6 +44,21 @@
   color: red;
 }
 
+.scorePanel {
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 24px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+.scorePanel .blueScore {
+  display: inline-block;
+  color: blue;
+}
+.scorePanel .redScore {
+  display: inline-block;
+  color: red;
+}
+
 .instructionsText {
   font-family: Verdana, Geneva, sans-serif;
   font-size: 20px;

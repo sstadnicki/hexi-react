@@ -73,6 +73,23 @@ class CurrentPlayerPanel extends React.Component {
   }
 }
 
+class ScorePanel extends React.Component {
+  render() {
+    return (
+      <div className="scorePanel">
+        Score:&nbsp;&nbsp;
+        Blue:&nbsp;
+        <div className="blueScore">
+          {this.props.gameScore.blue}
+        </div>
+        &nbsp; Red:&nbsp;
+        <div className="redScore">
+          {this.props.gameScore.red}
+        </div>
+      </div>
+    )
+  }
+}
 class TileRack extends React.Component {
 
   renderTile(idx, val, selected) {
@@ -112,6 +129,9 @@ class InteractionPanel extends React.Component {
         </div>
         <CurrentPlayerPanel
           player = {this.props.currentPlayer}
+        />
+        <ScorePanel
+          gameScore = {this.props.gameScore}
         />
         <div className="wordHolder">
           Current Word:
@@ -361,6 +381,14 @@ class Game extends React.Component {
     return true;
   }
 
+  gameScore() {
+    return this.state.gameGrid.reduce(
+      (scores, tile) => ({blue: scores.blue + (tile.tileScore < 0? 1 : 0),
+                          red: scores.red + (tile.tileScore > 0? 1: 0)}),
+      {blue: 0, red: 0}
+    );
+  }
+
   updateUIState(newState) {
     this.uiState = newState;
     this.setState({instructionsText: this.uiInstructionsText[newState], buttonText: this.buttonText[newState]});
@@ -391,6 +419,7 @@ class Game extends React.Component {
             instructionsText = {this.state.instructionsText}
             buttonText = {this.state.buttonText}
             onButtonClick = {() => this.onPanelButtonClicked()}
+            gameScore = {this.gameScore()}
           />
         </div>
       </div>
