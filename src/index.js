@@ -172,7 +172,6 @@ class Game extends React.Component {
     buildWordStart: "buildWordStart",
     wordBuilding: "wordBuilding",
     wordBuilt: "wordBuilt",
-    invalidBuild: "invalidBuild",
     gameOver: "gameOver"
   };
 
@@ -182,6 +181,7 @@ class Game extends React.Component {
     buildWordStart: "Press and hold on a filled tile in the grid to start your word",
     wordBuilding: "Drag over tiles in the grid to draw your word",
     wordBuilt: "Submit your word",
+    buildTooShort: "Your word must contain at least three letters",
     invalidBuild: "You must draw a word through your new letter",
     gameOver: "Congratulations!"
   };
@@ -192,7 +192,6 @@ class Game extends React.Component {
     buildWordStart: "End turn",
     wordBuilding: "",
     wordBuilt: "Submit word",
-    invalidBuild: "",
     gameOver: ""
   };
 
@@ -249,7 +248,7 @@ class Game extends React.Component {
     };
     // Initialize the instruction text based on the UI state
     this.uiState = this.gameUIStates.selectingTile;
-    this.state.instructionsText =  this.uiInstructionsText[this.uiState];
+    this.state.instructionsText =  this.uiInstructionsText.selectingTile;
     this.state.buttonText = this.buttonText[this.uiState];
 
     // Initialize the tile array from the bag
@@ -262,19 +261,18 @@ class Game extends React.Component {
     // Assign off an arrow function to a variable on this so we can remove it as needed
     this.mouseUpFunc = () => {
       if (this.uiState === this.gameUIStates.wordBuilding) {
-        if (this.state.buildIndices.length > 2) {
-          // We're long enough - let's make sure that the word the player made
-          // goes through the tile they placed.
-          if (this.state.buildIndices.indexOf(this.state.tilePlacementLoc) < 0) {
-            this.updateUIState(this.gameUIStates.invalidBuild);
-          } else {
-            this.updateUIState(this.gameUIStates.wordBuilt);
-          }
-        } else {
-          // Clear out the word we're building and the list of indices we're building with,
-          // and bump our UI back to the start of word-building.
-          this.setState({builtWord: "", buildIndices: []});
+        if (this.state.buildIndices.length <= 2) {
+          // Fail if the word is too short
+          this.setState({builtWord: "", buildIndices: [], instructionsText: this.uiInstructionsText.buildTooShort});
           this.updateUIState(this.gameUIStates.buildWordStart);
+        } else if (this.state.buildIndices.indexOf(this.state.tilePlacementLoc) < 0) {
+          // Fail if it doesn't go through the placed tile
+          this.setState({builtWord: "", buildIndices: [], instructionsText: this.uiInstructionsText.invalidBuild});
+          this.updateUIState(this.gameUIStates.buildWordStart);
+        } else {
+          // Success!
+          this.setState({instructionsText: this.uiInstructionsText.wordBuilt});
+          this.updateUIState(this.gameUIStates.wordBuilt);
         }
         // Regardless, we remove the even listener from the window.
         window.removeEventListener("mouseup", this.mouseUpFunc);
@@ -284,7 +282,7 @@ class Game extends React.Component {
 
   onRackTileClicked(idx) {
     if ((this.uiState === this.gameUIStates.selectingTile) || (this.uiState === this.gameUIStates.tileSelected)) {
-      this.setState({ selectedRackTile: idx });
+      this.setState({ selectedRackTile: idx , instructionsText: this.uiInstructionsText.tileSelected});
       this.updateUIState(this.gameUIStates.tileSelected);
     }
   }
@@ -294,20 +292,20 @@ class Game extends React.Component {
       let selectedTileVal = this.state.tileArr[this.state.selectedRackTile].value;
       let newTileArr = update(this.state.tileArr, {[this.state.selectedRackTile]: {value: {$set: ""}}});
       let newGameGrid = update(this.state.gameGrid, {[idx]: {value: {$set: selectedTileVal}}});
-      this.setState({tileArr: newTileArr, gameGrid: newGameGrid, tilePlacementLoc: idx});
+      this.setState({tileArr: newTileArr, gameGrid: newGameGrid, tilePlacementLoc: idx, instructionsText: this.uiInstructionsText.buildWordStart});
       this.updateUIState(this.gameUIStates.buildWordStart);
     }
   }
 
   onGridTileMouseDown(idx) {
     if ((this.uiState === this.gameUIStates.buildWordStart)
-     || (this.uiState === this.gameUIStates.wordBuilt)
-     || (this.uiState === this.gameUIStates.invalidBuild)) {
+     || (this.uiState === this.gameUIStates.wordBuilt)) {
       if (this.state.gameGrid[idx].value !== "") {
         this.setState({
           builtWord: this.state.gameGrid[idx].value,
           buildIndices: [idx]
         });
+        this.setState({instructionsText: this.uiInstructionsText.wordBuilt});
         this.updateUIState(this.gameUIStates.wordBuilding);
         window.addEventListener("mouseup", this.mouseUpFunc);
       }
@@ -391,7 +389,13 @@ class Game extends React.Component {
       selectedRackTile: undefined,
       currentPlayer: newPlayer
     });
-    this.updateUIState(this.isGameOver()? this.gameUIStates.gameOver: this.gameUIStates.selectingTile);
+    if (this.isGameOver()) {
+      this.setState({instructionsText: this.uiInstructionsText.gameOver});
+      this.updateUIState(this.gameUIStates.gameOver);
+    } else {
+      this.setState({instructionsText: this.uiInstructionsText.selectingTile});
+      this.updateUIState(this.gameUIStates.selectingTile);
+    }
   }
 
   isGameOver() {
@@ -414,7 +418,7 @@ class Game extends React.Component {
 
   updateUIState(newState) {
     this.uiState = newState;
-    this.setState({instructionsText: this.uiInstructionsText[newState], buttonText: this.buttonText[newState]});
+    this.setState({buttonText: this.buttonText[newState]});
   }
 
   render() {
