@@ -183,6 +183,7 @@ class Game extends React.Component {
     wordBuilt: "Submit your word",
     buildTooShort: "Your word must contain at least three letters",
     invalidBuild: "You must draw a word through your new letter",
+    illegalWord: " is not a valid word",
     gameOver: "Congratulations!"
   };
 
@@ -268,6 +269,11 @@ class Game extends React.Component {
         } else if (this.state.buildIndices.indexOf(this.state.tilePlacementLoc) < 0) {
           // Fail if it doesn't go through the placed tile
           this.setState({builtWord: "", buildIndices: [], instructionsText: this.uiInstructionsText.invalidBuild});
+          this.updateUIState(this.gameUIStates.buildWordStart);
+        } else if (!(document.dictSet.has(this.state.builtWord.toUpperCase()))) {
+          // Fail if the word isn't in the dictionary
+          let wrongText = this.state.builtWord.toUpperCase() + this.uiInstructionsText.illegalWord;
+          this.setState({builtWord: "", buildIndices: [], instructionsText: wrongText});
           this.updateUIState(this.gameUIStates.buildWordStart);
         } else {
           // Success!

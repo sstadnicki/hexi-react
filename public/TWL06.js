@@ -1,4 +1,4 @@
-let dictSet = new Set([
+document.dictSet = new Set([
 "AA",
 "AAH",
 "AAHED",
