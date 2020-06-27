@@ -155,9 +155,11 @@ class InteractionPanel extends React.Component {
           {this.props.instructionsText}
         </div>
         <div className="actionButtonDiv">
-          <button className="submitButton" onClick={() => this.props.onButtonClick()}>
-            {this.props.buttonText}
-          </button>
+          {this.props.buttonText !== "" &&
+            <button className="submitButton" onClick={() => this.props.onButtonClick()}>
+              {this.props.buttonText}
+            </button>
+          }
         </div>
       </React.Fragment>
     );
@@ -242,7 +244,7 @@ class Game extends React.Component {
         selectedRackTile: null,
         tilePlacementLoc: null,
         instructionsText: "InstructionsText",
-        buttonText: "BUTTON",
+        buttonText: "",
         buildIndices: [],
         builtWord: "",
         previousWord: ""
