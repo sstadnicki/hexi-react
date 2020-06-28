@@ -121,6 +121,9 @@
   border: 6px solid #c0c040;
   color: white;
 }
+.gameTile.draggedOver {
+  background-color: #40d040;
+}
   
 #box00 {
   grid-column: 1 /span 1;

@@ -14,11 +14,18 @@ class GameTile extends React.Component {
         className = {"gameTile"
           + (this.props.selected ? " selected" : "")
           + (this.props.isNew ? " newTile" : "")
+          + (this.props.isDraggedOver ? " draggedOver" : "")
           + " score"+this.props.scoreShade}
         id = {this.props.id}
+        draggable = {this.props.draggable}
         onClick = {() => this.props.onTileClicked()}
         onMouseDown = {() => this.props.onTileMouseDown()}
         onMouseEnter = {() => this.props.onTileMouseEnter()}
+        onDragStart = {(evt) => this.props.onTileDragStart(evt)}
+        onDragOver = {(evt) => this.props.onTileDragOver(evt)}
+        onDragEnter = {(evt) => this.props.onTileDragEnter(evt)}
+        onDragLeave = {(evt) => this.props.onTileDragLeave(evt)}
+        onDrop = {(evt) => this.props.onTileDrop(evt)}
       >
         {
           this.props.value
@@ -30,17 +37,24 @@ class GameTile extends React.Component {
 
 class GameBoard extends React.Component {
 
-  renderTile(idx, row, col, val, score, selected, isNew) {
+  renderTile(idx, row, col, val, score, selected, isNew, isDraggedOver) {
     return <GameTile
               key = {idx}
               id = {("box"+col)+row}
               value = {val}
               selected = {selected}
               isNew = {isNew}
+              isDraggedOver = {isDraggedOver}
               scoreShade = {score}
+              draggable={false}
               onTileClicked = {() => this.props.onTileClicked(idx)}
               onTileMouseDown = {() => this.props.onTileMouseDown(idx)}
               onTileMouseEnter = {() => this.props.onTileMouseEnter(idx)}
+              onTileDragStart = {() => {}}
+              onTileDragOver = {(evt) => this.props.onTileDragOver(evt, idx)}
+              onTileDragEnter = {(evt) => this.props.onTileDragEnter(evt, idx)}
+              onTileDragLeave = {(evt) => this.props.onTileDragLeave(evt, idx)}
+              onTileDrop = {(evt) => this.props.onTileDrop(evt, idx)}
             />;
   }
 
@@ -58,7 +72,8 @@ class GameBoard extends React.Component {
                 el.value,
                 el.tileScore,
                 tileSelected,
-                (elIdx === this.props.tilePlacementLoc)
+                (elIdx === this.props.tilePlacementLoc),
+                (elIdx === this.props.draggedOverTile)
               );
             })
           }
@@ -110,9 +125,15 @@ class TileRack extends React.Component {
              id = {"tile"+idx}
              value = {val}
              selected = {selected}
-             onTileClicked = {() => this.props.onTileClicked(idx)}
-             onTileMouseDown = {() => {}}
+             draggable = {true}
+             onTileClicked = {() => {}}
+             onTileMouseDown = {() => this.props.onTileClicked(idx)}
              onTileMouseEnter = {() => {}}
+             onTileDragStart = {(evt) => this.props.onTileDragStart(evt, idx)}
+             onTileDragOver = {() => {}}
+             onTileDragEnter = {() => {}}
+             onTileDragLeave = {() => {}}
+             onTileDrop = {() => {}}
            />;
   }
 
@@ -207,6 +228,8 @@ class Game extends React.Component {
 
   uiState = undefined;
 
+  isDragging = false;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -243,6 +266,7 @@ class Game extends React.Component {
         ],
         selectedRackTile: null,
         tilePlacementLoc: null,
+        draggedOverTile: null,
         instructionsText: "InstructionsText",
         buttonText: "",
         buildIndices: [],
@@ -295,6 +319,11 @@ class Game extends React.Component {
     }
   }
 
+  onRackTileDragStart(evt, idx) {
+    this.isDragging = true;
+    this.rackTileIdx = idx;
+  }
+
   onGridTileClicked(idx) {
     if ((this.uiState === this.gameUIStates.tileSelected) && (this.state.gameGrid[idx].value === "")) {
       let selectedTileVal = this.state.tileArr[this.state.selectedRackTile].value;
@@ -317,6 +346,41 @@ class Game extends React.Component {
         this.updateUIState(this.gameUIStates.wordBuilding);
         window.addEventListener("mouseup", this.mouseUpFunc);
       }
+    }
+  }
+
+  onGridTileDragEnter(evt, idx) {
+    this.setState({draggedOverTile: idx});
+    evt.preventDefault();
+  }
+
+  onGridTileDragOver(evt, idx) {
+    evt.preventDefault();
+  }
+
+  onGridTileDragLeave(evt, idx) {
+    if (idx === this.state.draggedOverTile) {
+      this.setState({draggedOverTile: null});
+    }
+    evt.preventDefault();
+  }
+
+  onGridTileDrop(evt, idx) {
+    evt.preventDefault();
+    if ((this.uiState === this.gameUIStates.tileSelected) && (this.state.gameGrid[idx].value === "")) {
+      let selectedTileVal = this.state.tileArr[this.state.selectedRackTile].value;
+      let newTileArr = update(this.state.tileArr, {[this.state.selectedRackTile]: {value: {$set: ""}}});
+      let newGameGrid = update(this.state.gameGrid, {[idx]: {value: {$set: selectedTileVal}}});
+      this.setState({
+        tileArr: newTileArr,
+        gameGrid: newGameGrid,
+        tilePlacementLoc: idx,
+        instructionsText: this.uiInstructionsText.buildWordStart,
+        draggedOverTile: null
+      });
+      this.updateUIState(this.gameUIStates.buildWordStart);
+    } else {
+      this.setState({draggedOverTile: null})
     }
   }
 
@@ -437,14 +501,20 @@ class Game extends React.Component {
             tileGrid={this.state.gameGrid}
             buildIndices={this.state.buildIndices}
             tilePlacementLoc={this.state.tilePlacementLoc}
+            draggedOverTile = {this.state.draggedOverTile}
             onTileClicked = {(idx) => this.onGridTileClicked(idx)}
             onTileMouseEnter = {(idx) => this.onGridTileEnter(idx)}
             onTileMouseDown = {(idx) => this.onGridTileMouseDown(idx)}
+            onTileDragOver = {(evt, idx) => this.onGridTileDragOver(evt, idx)}
+            onTileDragEnter = {(evt, idx) => this.onGridTileDragEnter(evt, idx)}
+            onTileDragLeave = {(evt, idx) => this.onGridTileDragLeave(evt, idx)}
+            onTileDrop = {(evt, idx) => this.onGridTileDrop(evt, idx)}
           />
           <TileRack
             tileArr = {this.state.tileArr}
             selectedIdx = {this.state.selectedRackTile}
             onTileClicked = {(idx) => this.onRackTileClicked(idx)}
+            onTileDragStart = {(evt, idx) => this.onRackTileDragStart(evt, idx)}
           />
         </div>
         <div className="interactionPanel">
