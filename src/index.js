@@ -7,6 +7,35 @@ function getXYFromIndex(idx) {
   return {x: idx % 5, y: Math.floor(idx/5)};
 }
 
+// TileArrow uses an SVG element to draw the arrow from one tile to the next
+class TileArrow extends React.Component {
+  coordinateArr = [
+    "",
+    "50,50 26,58 25,47 15,70 40,73 31,67",
+    "50,50 45,75 35,70 50,90 65,70 55,75",
+    "50,50 31,33 40,27 15,30 25,53 26,42",
+    "",
+    "50,50 69,67 60,73 85,70 75,47 74,58",
+    "50,50 55,25 65,30 50,10 35,30 45,25",
+    "50,50 74,42 75,53 85,30 60,27 69,33"
+  ];
+
+  render() {
+    let arrowIdx = 3*(this.props.direction.y+1)+this.props.direction.x+1;
+    return (
+      <svg
+        style={{display: "block", position: "absolute", width: "100%", height: "100%", zIndex: "10"}}
+        viewBox="15 15 70 70"
+      >
+        <polygon
+          points={this.coordinateArr[arrowIdx]}
+        />
+      </svg>
+    )
+  }
+
+}
+
 class GameTile extends React.Component {
   render() {
     return (
@@ -27,9 +56,10 @@ class GameTile extends React.Component {
         onDragLeave = {(evt) => this.props.onTileDragLeave(evt)}
         onDrop = {(evt) => this.props.onTileDrop(evt)}
       >
-        {
-          this.props.value
-        }
+        {this.props.nextDirection && <TileArrow direction={this.props.nextDirection} />}
+        <div style={{display: "block", position: "absolute"}} >
+          {this.props.value}
+        </div>
       </div>
     );
   }
@@ -37,12 +67,13 @@ class GameTile extends React.Component {
 
 class GameBoard extends React.Component {
 
-  renderTile(idx, row, col, val, score, selected, isNew, isDraggedOver) {
+  renderTile(idx, row, col, val, score, selected, nextDirection, isNew, isDraggedOver) {
     return <GameTile
               key = {idx}
               id = {("box"+col)+row}
               value = {val}
               selected = {selected}
+              nextDirection = {nextDirection}
               isNew = {isNew}
               isDraggedOver = {isDraggedOver}
               scoreShade = {score}
@@ -64,7 +95,13 @@ class GameBoard extends React.Component {
           {
             this.props.tileGrid.map((el, elIdx) => {
               let {x: colIdx, y: rowIdx} = getXYFromIndex(elIdx);
-              let tileSelected = (this.props.buildIndices.indexOf(elIdx) !== -1);
+              let arrayIdx = this.props.buildIndices.indexOf(elIdx);
+              let tileSelected = (arrayIdx !== -1);
+              let nextDirection = null;
+              if (tileSelected && (arrayIdx < this.props.buildIndices.length-1)) {
+                let nextXY = getXYFromIndex(this.props.buildIndices[arrayIdx+1]);
+                nextDirection = {x: nextXY.x - colIdx, y: nextXY.y - rowIdx};
+              }
               return this.renderTile(
                 elIdx,
                 rowIdx,
@@ -72,6 +109,7 @@ class GameBoard extends React.Component {
                 el.value,
                 el.tileScore,
                 tileSelected,
+                nextDirection,
                 (elIdx === this.props.tilePlacementLoc),
                 (elIdx === this.props.draggedOverTile)
               );
