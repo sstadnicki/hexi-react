@@ -213,12 +213,21 @@ class InteractionPanel extends React.Component {
         <div className="instructionsText">
           {this.props.instructionsText}
         </div>
-        <div className="actionButtonDiv">
-          {this.props.buttonText !== "" &&
-            <button className="submitButton" onClick={() => this.props.onButtonClick()}>
-              {this.props.buttonText}
-            </button>
-          }
+        <div className="buttonHolder">
+          <div className="actionButtonDiv">
+            {this.props.actionButtonText !== "" &&
+              <button className="actionButton" onClick={() => this.props.onActionButtonClick()}>
+                {this.props.actionButtonText}
+              </button>
+            }
+          </div>
+          <div className="undoButtonDiv">
+            {this.props.showUndoButton &&
+              <button className="undoButton" onClick={() => this.props.onUndoButtonCLick()}>
+                Undo
+              </button>
+            }
+          </div>
         </div>
       </React.Fragment>
     );
@@ -248,7 +257,7 @@ class Game extends React.Component {
     gameOver: "Congratulations!"
   };
 
-  buttonText = {
+  actionButtonText = {
     selectingTile: "",
     tileSelected: "",
     buildWordStart: "End turn",
@@ -306,15 +315,20 @@ class Game extends React.Component {
         tilePlacementLoc: null,
         draggedOverTile: null,
         instructionsText: "InstructionsText",
-        buttonText: "",
+        actionButtonText: "",
         buildIndices: [],
         builtWord: "",
-        previousWord: ""
+        previousWord: "",
+        turnStartState: {
+          gameGrid: [],
+          tileArr: [],
+          currentPlayer: null
+        }
     };
     // Initialize the instruction text based on the UI state
     this.uiState = this.gameUIStates.selectingTile;
     this.state.instructionsText =  this.uiInstructionsText.selectingTile;
-    this.state.buttonText = this.buttonText[this.uiState];
+    this.state.actionButtonText = this.actionButtonText[this.uiState];
 
     // Initialize the tile array from the bag
     for (let idx = 0; idx < this.state.tileArr.length; idx++) {
@@ -322,6 +336,9 @@ class Game extends React.Component {
       let bagTile = this.state.tileBag.splice(bagIdx, 1)[0];
       this.state.tileArr[idx].value = bagTile;
     }
+    this.state.turnStartState.gameGrid = [...this.state.gameGrid];
+    this.state.turnStartState.tileArr = [...this.state.tileArr];
+    this.state.turnStartState.currentPlayer = this.state.currentPlayer;
 
     // Assign off an arrow function to a variable on this so we can remove it as needed
     this.mouseUpFunc = () => {
@@ -462,7 +479,22 @@ class Game extends React.Component {
         || ((deltaX === 1) && (deltaY === -1));
   }
 
-  onPanelButtonClicked() {
+  resetToStartOfTurn() {
+    this.setState({
+      gameGrid: [...this.state.turnStartState.gameGrid],
+      tileArr: [...this.state.turnStartState.tileArr],
+      currentPlayer: this.state.turnStartState.currentPlayer,
+      instructionsText: this.uiInstructionsText.selectingTile,
+      builtWord: "",
+      buildIndices: [],
+      tilePlacementLoc: null,
+      draggedOverTile: null,
+      selectedRackTile: null
+    });
+    this.updateUIState(this.gameUIStates.selectingTile);
+  }
+
+  onPanelActionButtonClicked() {
     if (this.uiState === this.gameUIStates.buildWordStart) {
       // End the turn without making a word
       this.endTurn();
@@ -478,6 +510,10 @@ class Game extends React.Component {
       // And then end the turn
       this.endTurn();
     }
+  }
+
+  onPanelUndoButtonClicked() {
+    this.resetToStartOfTurn();
   }
 
   endTurn() {
@@ -503,7 +539,14 @@ class Game extends React.Component {
       this.setState({instructionsText: this.uiInstructionsText.gameOver});
       this.updateUIState(this.gameUIStates.gameOver);
     } else {
-      this.setState({instructionsText: this.uiInstructionsText.selectingTile});
+      this.setState({
+        instructionsText: this.uiInstructionsText.selectingTile,
+        turnStartState: {
+          gameGrid: [...this.state.gameGrid],
+          tileArr: [...newTileArr],
+          currentPlayer: newPlayer
+        }
+      });
       this.updateUIState(this.gameUIStates.selectingTile);
     }
   }
@@ -528,7 +571,7 @@ class Game extends React.Component {
 
   updateUIState(newState) {
     this.uiState = newState;
-    this.setState({buttonText: this.buttonText[newState]});
+    this.setState({actionButtonText: this.actionButtonText[newState]});
   }
 
   render() {
@@ -561,8 +604,10 @@ class Game extends React.Component {
             currentWord = {this.state.builtWord}
             previousWord = {this.state.previousWord}
             instructionsText = {this.state.instructionsText}
-            buttonText = {this.state.buttonText}
-            onButtonClick = {() => this.onPanelButtonClicked()}
+            actionButtonText = {this.state.actionButtonText}
+            showUndoButton = {(this.uiState !== this.gameUIStates.selectingTile) && (this.uiState !== this.gameUIStates.tileSelected)}
+            onActionButtonClick = {() => this.onPanelActionButtonClicked()}
+            onUndoButtonCLick = {() => this.onPanelUndoButtonClicked()}
             gameScore = {this.gameScore()}
           />
         </div>
