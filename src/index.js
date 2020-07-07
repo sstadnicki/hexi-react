@@ -3,8 +3,9 @@ import ReactDOM from 'react-dom';
 import update from 'immutability-helper';
 import './boardStyle.css';
 
+const BOARD_SIZE = 5;
 function getXYFromIndex(idx) {
-  return {x: idx % 5, y: Math.floor(idx/5)};
+  return {x: idx % BOARD_SIZE, y: Math.floor(idx/BOARD_SIZE)};
 }
 
 // TileArrow uses an SVG element to draw the arrow from one tile to the next
@@ -304,7 +305,7 @@ class Game extends React.Component {
     super(props);
     this.state = {
         currentPlayer: 0,
-        gameGrid: Array(25).fill(null).map((el, index) => ({value: "", tileScore: 0})),
+        gameGrid: Array(BOARD_SIZE*BOARD_SIZE).fill(null).map((el, index) => ({value: "", tileScore: 0})),
         tileArr: Array(6).fill(null).map((el, index) => ({value: ""})),
         tileBag: [
           "A", "A", "A", "A", "A", "A", 
@@ -503,6 +504,59 @@ class Game extends React.Component {
         || ((deltaX === 1) && (deltaY === -1));
   }
 
+  adjacentIndicesList = [
+    {x: 1, y: 0},
+    {x: -1, y: 0},
+    {x: 0, y: 1},
+    {x: 0, y: -1},
+    {x: -1, y: 1},
+    {x: 1, y: -1}
+  ];
+
+  countAdjacentFilled(idx) {
+    let {x, y} = getXYFromIndex(idx);
+    let count = 0;
+    for (let neighborDelta of this.adjacentIndicesList) {
+      let testX = x+neighborDelta.x;
+      let testY = y+neighborDelta.y;
+      if ((testX < 0) || (testY < 0) || (testX >= BOARD_SIZE) || (testY >= BOARD_SIZE)) {
+        continue;
+      }
+      let testIdx = BOARD_SIZE*testY+testX;
+      if (this.state.gameGrid[testIdx].value !== "") {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  couldBuildWord() {
+    let index = this.state.tilePlacementLoc;
+    // If we don't actually have a placed tile, then we can't build a word.
+    if (!index) return false;
+    let neighbors = this.countAdjacentFilled(index);
+    // If we have no neighbors, we're definitely not able to build.
+    if (neighbors === 0) return false;
+    // If there are at least two filled tiles adjacent to the placed tile, we assume we can.
+    if (neighbors > 1) return true;
+    // Otherwise, we look for the (at most) one filled neighbor of the placed tile,
+    // and check to see if _it_ has two neighbors.
+    let {x, y} = getXYFromIndex(index);
+    for (let neighborDelta of this.adjacentIndicesList) {
+      let testX = x+neighborDelta.x;
+      let testY = y+neighborDelta.y;
+      if ((testX < 0) || (testY < 0) || (testX >= BOARD_SIZE) || (testY >= BOARD_SIZE)) {
+        continue;
+      }
+      let testIdx = BOARD_SIZE*testY+testX;
+      if (this.state.gameGrid[testIdx].value !== "") {
+        return (this.countAdjacentFilled(testIdx) >= 2);
+      }
+    }
+    // We should never get here, but we may as well just return false if we do.
+    return false;
+  }
+
   resetToStartOfTurn() {
     this.setState({
       gameGrid: [...this.state.turnStartState.gameGrid],
@@ -520,9 +574,12 @@ class Game extends React.Component {
 
   onPanelActionButtonClicked() {
     if (this.uiState === this.gameUIStates.buildWordStart) {
-      // Fire up the confirmation dialog to make sure the player wants to end the turn
-      // this.endTurn();
-      this.setState({showConfirmation: true});
+      if (this.couldBuildWord()) {
+        // Fire up the confirmation dialog to make sure the player wants to end the turn
+        this.setState({showConfirmation: true});
+      } else {
+        this.endTurn();
+      }
     } else if (this.uiState === this.gameUIStates.wordBuilt) {
       // Make the word
       let newGameGrid = [...this.state.gameGrid];
