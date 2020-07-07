@@ -234,6 +234,29 @@ class InteractionPanel extends React.Component {
   }
 }
 
+class ModalDialog extends React.Component {
+
+  render() {
+    return (this.props.show && 
+      <div className="modalBackdrop">
+        <div className="modalMain">
+          {this.props.children}
+          <div className="modalFooter">
+            <button onClick={this.props.onCancelClick}>
+              Cancel
+            </button>
+            <button onClick={this.props.onOKClick}>
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 class Game extends React.Component {
 
   gameUIStates = {
@@ -319,6 +342,7 @@ class Game extends React.Component {
         buildIndices: [],
         builtWord: "",
         previousWord: "",
+        showConfirmation: false,
         turnStartState: {
           gameGrid: [],
           tileArr: [],
@@ -496,8 +520,9 @@ class Game extends React.Component {
 
   onPanelActionButtonClicked() {
     if (this.uiState === this.gameUIStates.buildWordStart) {
-      // End the turn without making a word
-      this.endTurn();
+      // Fire up the confirmation dialog to make sure the player wants to end the turn
+      // this.endTurn();
+      this.setState({showConfirmation: true});
     } else if (this.uiState === this.gameUIStates.wordBuilt) {
       // Make the word
       let newGameGrid = [...this.state.gameGrid];
@@ -574,9 +599,25 @@ class Game extends React.Component {
     this.setState({actionButtonText: this.actionButtonText[newState]});
   }
 
+  onCancelModal() {
+    this.setState({showConfirmation: false});
+  }
+
+  onOKModal() {
+    this.setState({showConfirmation: false});
+    this.endTurn();
+  }
+
   render() {
     return (
       <div className="wrapper">
+        <ModalDialog
+          show = {this.state.showConfirmation}
+          onCancelClick = {() => this.onCancelModal()}
+          onOKClick = {() => this.onOKModal()}
+        >
+          Are you sure you want to end your turn without submitting a word?
+        </ModalDialog>
         <div className="game">
           <GameBoard
             tileGrid={this.state.gameGrid}
