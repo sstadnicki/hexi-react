@@ -578,7 +578,7 @@ class Game extends React.Component {
         // Fire up the confirmation dialog to make sure the player wants to end the turn
         this.setState({showConfirmation: true});
       } else {
-        this.endTurn();
+        this.endTurn(this.state.gameGrid);
       }
     } else if (this.uiState === this.gameUIStates.wordBuilt) {
       // Make the word
@@ -590,7 +590,7 @@ class Game extends React.Component {
         this.setState({gameGrid: newGameGrid});
       }
       // And then end the turn
-      this.endTurn();
+      this.endTurn(newGameGrid);
     }
   }
 
@@ -598,7 +598,7 @@ class Game extends React.Component {
     this.resetToStartOfTurn();
   }
 
-  endTurn() {
+  endTurn(newGrid) {
     // First of all, fill the empty tile with a new tile from the bag
     let newTileBagIdx = Math.floor(Math.random() * this.state.tileBag.length);
     let newTileValue = this.state.tileBag[newTileBagIdx];
@@ -615,19 +615,19 @@ class Game extends React.Component {
       tilePlacementLoc: null,
       previousWord: prevWord,
       selectedRackTile: undefined,
-      currentPlayer: newPlayer
-    });
+      currentPlayer: newPlayer,
+      turnStartState: {
+        gameGrid: newGrid,
+        tileArr: newTileArr,
+        currentPlayer: newPlayer
+      }
+  });
     if (this.isGameOver()) {
       this.setState({instructionsText: this.uiInstructionsText.gameOver});
       this.updateUIState(this.gameUIStates.gameOver);
     } else {
       this.setState({
         instructionsText: this.uiInstructionsText.selectingTile,
-        turnStartState: {
-          gameGrid: [...this.state.gameGrid],
-          tileArr: [...newTileArr],
-          currentPlayer: newPlayer
-        }
       });
       this.updateUIState(this.gameUIStates.selectingTile);
     }
@@ -662,7 +662,7 @@ class Game extends React.Component {
 
   onOKModal() {
     this.setState({showConfirmation: false});
-    this.endTurn();
+    this.endTurn(this.state.gameGrid);
   }
 
   render() {
