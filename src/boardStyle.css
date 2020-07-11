@@ -1,7 +1,28 @@
 .wrapper {
   display: grid;
-  grid-template-columns: min-content 20px 300px;
+  grid-template-columns: min-content 60px 300px;
+  grid-template-rows: 100px auto;
 }
+
+.wrapper .titleBar {
+  align-self: top;
+  text-align: center;
+  grid-column: 1;
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 36px;
+}
+
+.wrapper .buttonDiv {
+  grid-column: 3;
+  align-self: right;
+}
+
+.wrapper .buttonDiv button {
+  float: right;
+  font-family: Verdana, Geneva, sans-serif;
+  font-size: 16px;
+}
+
 
 .wrapper .game {
   display: inline-grid;

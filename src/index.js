@@ -675,6 +675,12 @@ class Game extends React.Component {
         >
           Are you sure you want to end your turn without submitting a word?
         </ModalDialog>
+        <div className="titleBar">
+          Hexicography
+        </div>
+        <div className="buttonDiv">
+          <button onClick={() => window.open("instructions.html")}>How To Play</button>
+        </div>
         <div className="game">
           <GameBoard
             tileGrid={this.state.gameGrid}
