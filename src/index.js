@@ -3,123 +3,10 @@ import ReactDOM from 'react-dom';
 import update from 'immutability-helper';
 import './boardStyle.css';
 
+import GameBoard, { getXYFromIndex } from './components/GameBoard';
+import TileRack from './components/TileRack';
+
 const BOARD_SIZE = 5;
-function getXYFromIndex(idx) {
-  return {x: idx % BOARD_SIZE, y: Math.floor(idx/BOARD_SIZE)};
-}
-
-// TileArrow uses an SVG element to draw the arrow from one tile to the next
-class TileArrow extends React.Component {
-  coordinateArr = [
-    "",
-    "50,50 26,58 25,47 15,70 40,73 31,67",
-    "50,50 45,75 35,70 50,90 65,70 55,75",
-    "50,50 31,33 40,27 15,30 25,53 26,42",
-    "",
-    "50,50 69,67 60,73 85,70 75,47 74,58",
-    "50,50 55,25 65,30 50,10 35,30 45,25",
-    "50,50 74,42 75,53 85,30 60,27 69,33"
-  ];
-
-  render() {
-    let arrowIdx = 3*(this.props.direction.y+1)+this.props.direction.x+1;
-    return (
-      <svg
-        style={{display: "block", position: "absolute", width: "100%", height: "100%", zIndex: "10"}}
-        viewBox="15 15 70 70"
-      >
-        <polygon
-          points={this.coordinateArr[arrowIdx]}
-        />
-      </svg>
-    )
-  }
-
-}
-
-class GameTile extends React.Component {
-  render() {
-    return (
-      <div
-        className = {"gameTile"
-          + (this.props.selected ? " selected" : "")
-          + (this.props.isNew ? " newTile" : "")
-          + (this.props.isDraggedOver ? " draggedOver" : "")
-          + " score"+this.props.scoreShade}
-        id = {this.props.id}
-        draggable = {this.props.draggable}
-        onClick = {() => this.props.onTileClicked()}
-        onMouseDown = {() => this.props.onTileMouseDown()}
-        onMouseEnter = {() => this.props.onTileMouseEnter()}
-        onDragStart = {(evt) => this.props.onTileDragStart(evt)}
-        onDragOver = {(evt) => this.props.onTileDragOver(evt)}
-        onDragEnter = {(evt) => this.props.onTileDragEnter(evt)}
-        onDragLeave = {(evt) => this.props.onTileDragLeave(evt)}
-        onDrop = {(evt) => this.props.onTileDrop(evt)}
-      >
-        {this.props.nextDirection && <TileArrow direction={this.props.nextDirection} />}
-        <div style={{display: "block", position: "absolute"}} >
-          {this.props.value}
-        </div>
-      </div>
-    );
-  }
-}
-
-class GameBoard extends React.Component {
-
-  renderTile(idx, row, col, val, score, selected, nextDirection, isNew, isDraggedOver) {
-    return <GameTile
-              key = {idx}
-              id = {("box"+col)+row}
-              value = {val}
-              selected = {selected}
-              nextDirection = {nextDirection}
-              isNew = {isNew}
-              isDraggedOver = {isDraggedOver}
-              scoreShade = {score}
-              draggable={false}
-              onTileClicked = {() => this.props.onTileClicked(idx)}
-              onTileMouseDown = {() => this.props.onTileMouseDown(idx)}
-              onTileMouseEnter = {() => this.props.onTileMouseEnter(idx)}
-              onTileDragStart = {() => {}}
-              onTileDragOver = {(evt) => this.props.onTileDragOver(evt, idx)}
-              onTileDragEnter = {(evt) => this.props.onTileDragEnter(evt, idx)}
-              onTileDragLeave = {(evt) => this.props.onTileDragLeave(evt, idx)}
-              onTileDrop = {(evt) => this.props.onTileDrop(evt, idx)}
-            />;
-  }
-
-  render() {
-    return (
-        <div className="gameBoard">
-          {
-            this.props.tileGrid.map((el, elIdx) => {
-              let {x: colIdx, y: rowIdx} = getXYFromIndex(elIdx);
-              let arrayIdx = this.props.buildIndices.indexOf(elIdx);
-              let tileSelected = (arrayIdx !== -1);
-              let nextDirection = null;
-              if (tileSelected && (arrayIdx < this.props.buildIndices.length-1)) {
-                let nextXY = getXYFromIndex(this.props.buildIndices[arrayIdx+1]);
-                nextDirection = {x: nextXY.x - colIdx, y: nextXY.y - rowIdx};
-              }
-              return this.renderTile(
-                elIdx,
-                rowIdx,
-                colIdx,
-                el.value,
-                el.tileScore,
-                tileSelected,
-                nextDirection,
-                (elIdx === this.props.tilePlacementLoc),
-                (elIdx === this.props.draggedOverTile)
-              );
-            })
-          }
-        </div>
-    );
-  }
-}
 
 class CurrentPlayerPanel extends React.Component {
   playerNameTable = [
@@ -152,38 +39,6 @@ class ScorePanel extends React.Component {
         <div className="redScore">
           {this.props.gameScore.red}
         </div>
-      </div>
-    )
-  }
-}
-class TileRack extends React.Component {
-
-  renderTile(idx, val, selected) {
-    return <GameTile
-             key = {idx}
-             id = {"tile"+idx}
-             value = {val}
-             selected = {selected}
-             draggable = {true}
-             onTileClicked = {() => {}}
-             onTileMouseDown = {() => this.props.onTileClicked(idx)}
-             onTileMouseEnter = {() => {}}
-             onTileDragStart = {(evt) => this.props.onTileDragStart(evt, idx)}
-             onTileDragOver = {() => {}}
-             onTileDragEnter = {() => {}}
-             onTileDragLeave = {() => {}}
-             onTileDrop = {() => {}}
-           />;
-  }
-
-  render() {
-    return (
-      <div className="tileRack">
-        {
-          this.props.tileArr.map((el, idx) =>
-            this.renderTile(idx, el.value, (idx === this.props.selectedIdx))
-          )
-        }
       </div>
     )
   }
@@ -494,8 +349,8 @@ class Game extends React.Component {
   }
 
   areIndicesAdjacent(firstIdx, secondIdx) {
-    let {x: firstX, y: firstY} = getXYFromIndex(firstIdx);
-    let {x: secondX, y: secondY} = getXYFromIndex(secondIdx);
+    let {x: firstX, y: firstY} = getXYFromIndex(firstIdx, BOARD_SIZE);
+    let {x: secondX, y: secondY} = getXYFromIndex(secondIdx, BOARD_SIZE);
     let deltaX = secondX-firstX;
     let deltaY = secondY-firstY;
     return ((Math.abs(deltaX) === 1) && (deltaY === 0))
@@ -514,7 +369,7 @@ class Game extends React.Component {
   ];
 
   countAdjacentFilled(idx) {
-    let {x, y} = getXYFromIndex(idx);
+    let {x, y} = getXYFromIndex(idx, BOARD_SIZE);
     let count = 0;
     for (let neighborDelta of this.adjacentIndicesList) {
       let testX = x+neighborDelta.x;
@@ -541,7 +396,7 @@ class Game extends React.Component {
     if (neighbors > 1) return true;
     // Otherwise, we look for the (at most) one filled neighbor of the placed tile,
     // and check to see if _it_ has two neighbors.
-    let {x, y} = getXYFromIndex(index);
+    let {x, y} = getXYFromIndex(index, BOARD_SIZE);
     for (let neighborDelta of this.adjacentIndicesList) {
       let testX = x+neighborDelta.x;
       let testY = y+neighborDelta.y;
@@ -683,9 +538,10 @@ class Game extends React.Component {
         </div>
         <div className="game">
           <GameBoard
-            tileGrid={this.state.gameGrid}
-            buildIndices={this.state.buildIndices}
-            tilePlacementLoc={this.state.tilePlacementLoc}
+            boardSize = {BOARD_SIZE}
+            tileGrid = {this.state.gameGrid}
+            buildIndices = {this.state.buildIndices}
+            tilePlacementLoc = {this.state.tilePlacementLoc}
             draggedOverTile = {this.state.draggedOverTile}
             onTileClicked = {(idx) => this.onGridTileClicked(idx)}
             onTileMouseEnter = {(idx) => this.onGridTileEnter(idx)}
