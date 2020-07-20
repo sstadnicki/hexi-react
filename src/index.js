@@ -44,51 +44,67 @@ class Game extends React.Component {
     gameOver: ""
   };
 
-  // Defines the new score of a tile based on its previous score (-2..2, offset to be 0..4)
-  // and who just built a word through it (player 0 or player 1).
-  scoreUpdateTable = [
-    [-2, -2, -1, -1, 1],
-    [-1, 1, 1, 2, 2]
-  ];
-
   uiState = undefined;
 
   isDragging = false;
 
+  sampleJson=`
+  {
+    "gameBoard": {
+      "gameGrid": [
+        {"value": "", "tileScore": 0},
+        {"value": "A", "tileScore": -1},
+        {"value": "B", "tileScore": 1},
+        {"value": "C", "tileScore": -1},
+        {"value": "D", "tileScore": 1},
+        {"value": "E", "tileScore": -1},
+        {"value": "", "tileScore": 0},
+        {"value": "F", "tileScore": -1},
+        {"value": "G", "tileScore": 1},
+        {"value": "H", "tileScore": -1},
+        {"value": "I", "tileScore": 1},
+        {"value": "J", "tileScore": -1},
+        {"value": "", "tileScore": 0},
+        {"value": "K", "tileScore": -1},
+        {"value": "L", "tileScore": 1},
+        {"value": "M", "tileScore": -1},
+        {"value": "N", "tileScore": 1},
+        {"value": "O", "tileScore": -1},
+        {"value": "", "tileScore": 0},
+        {"value": "P", "tileScore": -1},
+        {"value": "R", "tileScore": 1},
+        {"value": "S", "tileScore": -1},
+        {"value": "T", "tileScore": 1},
+        {"value": "U", "tileScore": -1},
+        {"value": "", "tileScore": 0}
+      ],
+      "lastPlacedTile": 10,
+      "lastWordIndices": [
+        10, 12, 15, 11
+      ]
+    },
+    "tileRack": {
+      "tileArr": [
+        {"value": "A"},
+        {"value": "C"},
+        {"value": "T"},
+        {"value": "I"},
+        {"value": "O"},
+        {"value": "N"}
+      ],
+      "newTileIndex": 2
+    },
+    "currentPlayer": "Blue",
+    "currentScore": [8, 4]
+  }
+  `;
+
   constructor(props) {
     super(props);
     this.state = {
-        currentPlayer: 0,
+        currentPlayer: null,
         gameGrid: Array(BOARD_SIZE*BOARD_SIZE).fill(null).map((el, index) => ({value: "", tileScore: 0})),
         tileArr: Array(6).fill(null).map((el, index) => ({value: ""})),
-        tileBag: [
-          "A", "A", "A", "A", "A", "A", 
-          "B", "B",
-          "C", "C",
-          "D", "D", "D",
-          "E", "E", "E", "E", "E", "E", "E", "E",
-          "F", "F",
-          "G", "G",
-          "H", "H",
-          "I", "I", "I", "I", "I", "I",
-          "J",
-          "K",
-          "L", "L", "L", "L",
-          "M", "M",
-          "N", "N", "N", "N",
-          "O", "O", "O", "O", "O",
-          "P", "P",
-          "Qu",
-          "R", "R", "R", "R", "R",
-          "S", "S", "S", "S",
-          "T", "T", "T", "T", "T",
-          "U", "U",
-          "V",
-          "W",
-          "X",
-          "Y", "Y",
-          "Z"
-        ],
         selectedRackTile: null,
         tilePlacementLoc: null,
         draggedOverTile: null,
@@ -108,16 +124,6 @@ class Game extends React.Component {
     this.uiState = this.gameUIStates.selectingTile;
     this.state.instructionsText =  this.uiInstructionsText.selectingTile;
     this.state.actionButtonText = this.actionButtonText[this.uiState];
-
-    // Initialize the tile array from the bag
-    for (let idx = 0; idx < this.state.tileArr.length; idx++) {
-      let bagIdx = Math.floor(Math.random() * this.state.tileBag.length);
-      let bagTile = this.state.tileBag.splice(bagIdx, 1)[0];
-      this.state.tileArr[idx].value = bagTile;
-    }
-    this.state.turnStartState.gameGrid = [...this.state.gameGrid];
-    this.state.turnStartState.tileArr = [...this.state.tileArr];
-    this.state.turnStartState.currentPlayer = this.state.currentPlayer;
 
     // Assign off an arrow function to a variable on this so we can remove it as needed
     this.mouseUpFunc = () => {
@@ -145,6 +151,17 @@ class Game extends React.Component {
       }
     };
   }
+
+  componentDidMount() {
+
+    let currentGameState = JSON.parse(this.sampleJson);
+    this.setState({
+      gameGrid: currentGameState.gameBoard.gameGrid,
+      tileArr: currentGameState.tileRack.tileArr,
+      currentPlayer: currentGameState.currentPlayer
+    }); 
+  }
+
 
   onRackTileClicked(idx) {
     if ((this.uiState === this.gameUIStates.selectingTile) || (this.uiState === this.gameUIStates.tileSelected)) {
@@ -332,19 +349,11 @@ class Game extends React.Component {
         // Fire up the confirmation dialog to make sure the player wants to end the turn
         this.setState({showConfirmation: true});
       } else {
-        this.endTurn(this.state.gameGrid);
+        this.endTurn();
       }
     } else if (this.uiState === this.gameUIStates.wordBuilt) {
-      // Make the word
-      let newGameGrid = [...this.state.gameGrid];
-      for (let buildIdx of this.state.buildIndices) {
-        newGameGrid[buildIdx] = {...newGameGrid[buildIdx],
-          tileScore: this.scoreUpdateTable[this.state.currentPlayer][newGameGrid[buildIdx].tileScore+2]
-        };
-        this.setState({gameGrid: newGameGrid});
-      }
       // And then end the turn
-      this.endTurn(newGameGrid);
+      this.endTurn();
     }
   }
 
@@ -352,49 +361,16 @@ class Game extends React.Component {
     this.resetToStartOfTurn();
   }
 
-  endTurn(newGrid) {
-    // First of all, fill the empty tile with a new tile from the bag
-    let newTileBagIdx = Math.floor(Math.random() * this.state.tileBag.length);
-    let newTileValue = this.state.tileBag[newTileBagIdx];
-    let newTileArr = update(this.state.tileArr, {[this.state.selectedRackTile]: {value: {$set: newTileValue}}})
-    let newTileBag = update(this.state.tileBag, {$splice: [[newTileBagIdx, 1]]});
-    // Then update the player whose turn it is
-    let newPlayer = 1-this.state.currentPlayer;
-    let prevWord = this.state.builtWord;
-    this.setState({
-      tileArr: newTileArr,
-      tileBag: newTileBag,
-      buildIndices: [],
-      builtWord: "",
-      tilePlacementLoc: null,
-      previousWord: prevWord,
-      selectedRackTile: undefined,
-      currentPlayer: newPlayer,
-      turnStartState: {
-        gameGrid: newGrid,
-        tileArr: newTileArr,
-        currentPlayer: newPlayer
-      }
-  });
-    if (this.isGameOver()) {
-      this.setState({instructionsText: this.uiInstructionsText.gameOver});
-      this.updateUIState(this.gameUIStates.gameOver);
-    } else {
-      this.setState({
-        instructionsText: this.uiInstructionsText.selectingTile,
-      });
-      this.updateUIState(this.gameUIStates.selectingTile);
-    }
-  }
-
-  isGameOver() {
-    // Check all of our tiles to see if any are empty. If so, the game's not over.
-    for (let tile of this.state.gameGrid) {
-      if (tile.value === "")
-        return false;
-    }
-    // If they're all full, then the game is done!
-    return true;
+  endTurn() {
+    // Construct a submitted move representing the tile the player placed, where they placed it, and what word they made
+    let submittedMove = {
+      chosenTile: this.state.selectedRackTile,
+      tileLocation: this.state.tilePlacementLoc,
+      buildIndices: this.state.buildIndices
+    };
+    let submittedMoveJson = JSON.stringify(submittedMove);
+    // This should be sent to the API, but for now, let's just print it to the console.
+    console.log(submittedMoveJson);
   }
 
   gameScore() {
