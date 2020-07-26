@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom'; 
+import { BrowserRouter, Route, Link, Switch } from 'react-router-dom';
 import update from 'immutability-helper';
 import './boardStyle.css';
 
@@ -154,12 +155,16 @@ class Game extends React.Component {
 
   componentDidMount() {
 
+    console.log(`Our props: ${JSON.stringify(this.props)}`);
     let currentGameState = JSON.parse(this.sampleJson);
+    let rackTiles = (this.props.match && this.props.match.params)? this.props.match.params.rackTiles: undefined;
+    console.log(`rackTiles: ${rackTiles}`);
     this.setState({
       gameGrid: currentGameState.gameBoard.gameGrid,
-      tileArr: currentGameState.tileRack.tileArr,
+      tileArr: (rackTiles && rackTiles.split("").map(st => {return {value: st}})) || currentGameState.tileRack.tileArr,
       currentPlayer: currentGameState.currentPlayer
     }); 
+
   }
 
 
@@ -451,7 +456,40 @@ class Game extends React.Component {
   }
 }
 
+class MainPage extends React.Component {
+  render() {
+    return (
+      <div>This is the main page!</div>
+    );
+  }
+}
+
+class HeaderBar extends React.Component {
+  render() {
+    return (
+      <div><nav>
+        <ul>
+          <li><Link to="/">Home</Link></li>
+          <li><Link to="/games/">Games</Link></li>
+          <li><Link to="/signin/">Sign In</Link></li>
+        </ul>
+      </nav></div>
+    )
+  }
+}
+
 ReactDOM.render(
-  <Game />,
+  <BrowserRouter>
+    <HeaderBar />
+    <Switch>
+      <Route path="/game/" exact>
+        <Game />
+      </Route>
+      <Route path="/game/:rackTiles" component={Game} />
+      <Route path="/">
+        <MainPage />
+      </Route>
+    </Switch>
+  </BrowserRouter>,
   document.getElementById('root')
 );
