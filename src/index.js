@@ -155,16 +155,20 @@ class Game extends React.Component {
 
   componentDidMount() {
 
-    console.log(`Our props: ${JSON.stringify(this.props)}`);
-    let currentGameState = JSON.parse(this.sampleJson);
-    let rackTiles = (this.props.match && this.props.match.params)? this.props.match.params.rackTiles: undefined;
-    console.log(`rackTiles: ${rackTiles}`);
-    this.setState({
-      gameGrid: currentGameState.gameBoard.gameGrid,
-      tileArr: (rackTiles && rackTiles.split("").map(st => {return {value: st}})) || currentGameState.tileRack.tileArr,
-      currentPlayer: currentGameState.currentPlayer
-    }); 
-
+    let gameId = (this.props.match && this.props.match.params)? this.props.match.params.gameId: undefined;
+    console.log(`fetching game ${gameId}`);
+    fetch(
+      `http://localhost:9999/api/games/${gameId}`,
+      {crossDomain: true}
+    )
+    .then(res => res.json())
+    .then(data => {
+      this.setState({
+        gameGrid: data.gameBoard.gameGrid,
+        tileArr: data.tileRack.tileArr,
+        currentPlayer: data.currentPlayer
+      }); 
+    });
   }
 
 
@@ -485,7 +489,7 @@ ReactDOM.render(
       <Route path="/game/" exact>
         <Game />
       </Route>
-      <Route path="/game/:rackTiles" component={Game} />
+      <Route path="/game/:gameId" component={Game} />
       <Route path="/">
         <MainPage />
       </Route>
