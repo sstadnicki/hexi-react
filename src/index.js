@@ -380,7 +380,18 @@ class Game extends React.Component {
     };
     let submittedMoveJson = JSON.stringify(submittedMove);
     // This should be sent to the API, but for now, let's just print it to the console.
-    console.log(submittedMoveJson);
+    let gameId = (this.props.match && this.props.match.params)? this.props.match.params.gameId: undefined;
+    fetch(
+      `http://localhost:9999/api/games/${gameId}`, {
+        method: 'PUT',
+        crossDomain: true,
+        headers: {
+          'Content-type': 'application/json; charset=UTF-8'
+         },
+        body: submittedMoveJson
+      }
+    )
+    // console.log(submittedMoveJson);
   }
 
   gameScore() {
