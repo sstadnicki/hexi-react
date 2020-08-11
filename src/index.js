@@ -8,6 +8,7 @@ import GameBoard, { getXYFromIndex } from './components/GameBoard';
 import TileRack from './components/TileRack';
 import ModalDialog from './components/ModalDialog';
 import InteractionPanel from './components/InteractionPanel';
+import { render } from '@testing-library/react';
 
 const BOARD_SIZE = 5;
 
@@ -468,6 +469,52 @@ class MainPage extends React.Component {
   }
 }
 
+class GamesListItem extends React.Component {
+  render() {
+    return (
+      <li id={this.props.id}>
+      <Link to={`/game/${this.props.id}`}>{this.props.id}</Link>
+      </li>
+    )
+  }
+}
+
+class GamesList extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {idList: []};
+  }
+
+  componentDidMount() {
+    console.log(`fetching game list`);
+    fetch(
+      `http://localhost:9999/api/games/list`,
+      {crossDomain: true}
+    )
+    .then(res => res.json())
+    .then(data => {
+      let idArr = data.map((element) => element._id);
+      this.setState({idList: [...idArr]});
+    });
+  }
+
+  render() {
+    return (
+      <div>
+        <ul className="gamesList">
+          {
+            this.state.idList.map((id) => 
+            <GamesListItem id={id} />
+            )
+          }
+        </ul>
+      </div>
+    );
+  }
+
+}
+
 class HeaderBar extends React.Component {
   render() {
     return (
@@ -486,8 +533,8 @@ ReactDOM.render(
   <BrowserRouter>
     <HeaderBar />
     <Switch>
-      <Route path="/game/" exact>
-        <Game />
+      <Route path="/games/" exact>
+        <GamesList />
       </Route>
       <Route path="/game/:gameId" component={Game} />
       <Route path="/">
