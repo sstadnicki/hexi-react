@@ -499,6 +499,17 @@ class GamesList extends React.Component {
     });
   }
 
+  createNew() {
+    fetch(
+      `http://localhost:9999/api/games/create`, {
+        method: 'POST',
+        crossDomain: true
+      }
+    )
+    .then(res => res.json())
+    .then(data => this.setState({idList: [...this.state.idList, data.gameId]}))
+  }
+
   render() {
     return (
       <div>
@@ -509,6 +520,7 @@ class GamesList extends React.Component {
             )
           }
         </ul>
+        <button id="newGame" onClick={() => this.createNew()}>New Game</button>
       </div>
     );
   }
