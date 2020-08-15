@@ -167,7 +167,7 @@ class Game extends React.Component {
       this.setState({
         gameGrid: data.gameBoard.gameGrid,
         tileArr: data.tileRack.tileArr,
-        currentPlayer: data.currentPlayer
+        currentPlayer: (data.currentPlayer == 0? "Blue": "Red")
       }); 
     });
   }
