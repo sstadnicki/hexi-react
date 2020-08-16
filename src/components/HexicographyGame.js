@@ -346,9 +346,8 @@ class HexicographyGame extends React.Component {
           },
         body: submittedMoveJson
       }
+    ).then((response) => response.json()
     ).then((resultData) => {
-      console.log('resultData:');
-      console.log(JSON.stringify(resultData));
       if (resultData.success) {
         // It worked! use the gameData to update the game
         this.setStateFromGame(resultData.gameData);
