@@ -111,11 +111,20 @@ class HexicographyGame extends React.Component {
     )
     .then(res => res.json())
     .then(data => {
-      this.setState({
-        gameGrid: data.gameBoard.gameGrid,
-        tileArr: data.tileRack.tileArr,
-        currentPlayer: (data.currentPlayer == 0? "Blue": "Red")
-      }); 
+      this.setStateFromGame(data);
+    });
+  }
+
+  setStateFromGame(gameData) {
+    this.setState({
+      gameGrid: [...gameData.gameBoard.gameGrid],
+      tileArr: [...gameData.tileRack.tileArr],
+      currentPlayer: gameData.currentPlayer,
+      turnStartState: {
+        gameGrid: [...gameData.gameBoard.gameGrid],
+        tileArr: [...gameData.tileRack.tileArr],
+        currentPlayer: gameData.currentPlayer
+      }
     });
   }
 
@@ -338,9 +347,11 @@ class HexicographyGame extends React.Component {
         body: submittedMoveJson
       }
     ).then((resultData) => {
+      console.log('resultData:');
+      console.log(JSON.stringify(resultData));
       if (resultData.success) {
         // It worked! use the gameData to update the game
-        // doStuffWith(resultData.gameData);
+        this.setStateFromGame(resultData.gameData);
       } else {
         // logErrorWith(resultData.reason || "Unknown error");
       }
@@ -410,7 +421,7 @@ class HexicographyGame extends React.Component {
         </div>
         <div className="interactionPanel">
           <InteractionPanel
-            currentPlayer = {this.state.currentPlayer}
+            currentPlayer = {this.state.currentPlayer? "Blue": "Red"}
             currentWord = {this.state.builtWord}
             previousWord = {this.state.previousWord}
             instructionsText = {this.state.instructionsText}
