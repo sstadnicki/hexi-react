@@ -132,6 +132,7 @@ class HexicographyGame extends React.Component {
         currentPlayer: gameData.currentPlayer
       }
     });
+    this.updateUIState(this.gameUIStates.selectingTile);
   }
 
 
