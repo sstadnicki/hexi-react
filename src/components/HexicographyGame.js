@@ -120,6 +120,12 @@ class HexicographyGame extends React.Component {
       gameGrid: [...gameData.gameBoard.gameGrid],
       tileArr: [...gameData.tileRack.tileArr],
       currentPlayer: gameData.currentPlayer,
+      instructionsText: this.uiInstructionsText.selectingTile,
+      builtWord: "",
+      buildIndices: [],
+      tilePlacementLoc: null,
+      draggedOverTile: null,
+      selectedRackTile: null,
       turnStartState: {
         gameGrid: [...gameData.gameBoard.gameGrid],
         tileArr: [...gameData.tileRack.tileArr],
